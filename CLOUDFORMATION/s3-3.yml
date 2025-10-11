@@ -1,0 +1,5 @@
+Resources: # Start of Resources Section
+  Myprods3Bucket: # Logical Resource Name
+    Type: AWS::S3::Bucket #create the S3 Bucket
+    Properties:
+      BucketName: my-unique-prod-bucket-name-12345678 # Specify a unique bucket name

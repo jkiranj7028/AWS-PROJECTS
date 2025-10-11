@@ -1,0 +1,12 @@
+Parameters:
+  BucketName:
+    Type: String
+    Description: Enter the name of the bucket you want to create
+
+Resources:
+  MyProdS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+Outputs:
+

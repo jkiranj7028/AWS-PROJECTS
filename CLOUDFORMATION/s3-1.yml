@@ -1,0 +1,6 @@
+Resources: # Start of Resources Section
+  Myprods3Bucket: # Logical Resource Name
+    Type: AWS::S3::Bucket  #create the S3 Bucket
+
+
+

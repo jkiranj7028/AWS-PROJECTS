@@ -1,0 +1,3 @@
+aws ssm start-automation-execution \
+  --document-name "RestartEC2Instance" \
+  --parameters "InstanceId=i-0a838685d72d0eca2,AutomationAssumeRole=arn:aws:iam::123456789012:role/MySSMAutomationRole"
