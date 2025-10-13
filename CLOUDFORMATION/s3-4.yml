@@ -9,4 +9,6 @@ Resources:
     Properties:
       BucketName: !Ref BucketName
 Outputs:
-
+  MyS3BucketName:
+    Description: The name of s3 bucket we created
+    Value: !Ref MyProdS3Bucket
