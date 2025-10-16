@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviz Academy - Photo Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .logo img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 8px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #fff, #e3f2fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+            font-weight: 300;
+            margin-bottom: 5px;
+        }
+        
+        .header .project-tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .content {
+            padding: 50px;
+        }
+        
+        .upload-section {
+            border: 3px dashed #e0e7ff;
+            border-radius: 12px;
+            padding: 50px;
+            text-align: center;
+            margin-bottom: 40px;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f8faff 0%, #e3f2fd 100%);
+        }
+        
+        .upload-section:hover {
+            border-color: #2a5298;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            transform: translateY(-2px);
+        }
+        
+        .upload-section.dragover {
+            border-color: #1e3c72;
+            background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%);
+            transform: scale(1.02);
+        }
+        
+        .upload-section h3 {
+            color: #1e3c72;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .upload-section p {
+            color: #2a5298;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 18px 35px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+        }
+        
+        .upload-btn:hover {
+            background: linear-gradient(135deg, #2a5298 0%, #667eea 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 60, 114, 0.4);
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status {
+            margin-top: 25px;
+            padding: 18px;
+            border-radius: 8px;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+        
+        .status.error {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        
+        .status.loading {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1565c0;
+            border: 1px solid #90caf9;
+        }
+        
+        .photos-section {
+            margin-top: 50px;
+        }
+        
+        .photos-section h3 {
+            color: #1e3c72;
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+        
+        .photo-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e3f2fd;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .photo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+            border-color: #2a5298;
+        }
+        
+        .photo-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 15px;
+        }
+        
+        .photo-info strong {
+            color: #1e3c72;
+            font-weight: 600;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+        }
+        
+        .refresh-btn:hover {
+            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 125, 50, 0.4);
+        }
+        
+        .footer {
+            background: #f8faff;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e3f2fd;
+            color: #666;
+        }
+        
+        .footer .academy-info {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
+        .footer .tech-stack {
+            font-size: 0.8em;
+            color: #999;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .upload-section {
+                padding: 30px 20px;
+            }
+            
+            .photos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="logo.png" alt="Aviz Academy Logo">
+            </div>
+            <h1>Aviz Academy</h1>
+            <div class="subtitle">Serverless Photo Gallery</div>
+            <div class="project-tag">🚀 Aviz Capstone Project - AWS Serverless Architecture</div>
+        </div>
+        
+        <div class="content">
+            <div class="upload-section" id="uploadSection">
+                <h3>📸 Upload Your Photos</h3>
+                <p>Drag and drop photos here or click to select files</p>
+                <input type="file" id="fileInput" class="file-input" accept="image/*" multiple>
+                <button class="upload-btn" id="uploadBtn">Choose Photos</button>
+                <div class="status" id="status"></div>
+            </div>
+            
+            <div class="photos-section">
+                <h3>🖼️ Your Photo Collection</h3>
+                <button class="refresh-btn" id="refreshBtn">🔄 Refresh Gallery</button>
+                <div class="photos-grid" id="photosGrid"></div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="academy-info">
+                <strong>Aviz Academy</strong> - Empowering Cloud Excellence
+            </div>
+            <div class="tech-stack">
+                Built with AWS Lambda • DynamoDB • S3 • API Gateway • Serverless Architecture
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // UPDATE THIS URL WITH YOUR API GATEWAY URL
+        const API_URL = 'https://zwlhf68yxi.execute-api.ap-south-1.amazonaws.com/prod';
+        
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadSection = document.getElementById('uploadSection');
+        const status = document.getElementById('status');
+        const photosGrid = document.getElementById('photosGrid');
+        const refreshBtn = document.getElementById('refreshBtn');
+        
+        // File input handling
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFiles);
+        
+        // Drag and drop handling
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+        
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+        
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            if (files.length > 0) {
+                uploadFiles(files);
+            }
+        });
+        
+        // Refresh button
+        refreshBtn.addEventListener('click', loadPhotos);
+        
+        function handleFiles(e) {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                uploadFiles(files);
+            }
+        }
+        
+        async function uploadFiles(files) {
+            showStatus('Uploading photos...', 'loading');
+            uploadBtn.disabled = true;
+            
+            try {
+                for (const file of files) {
+                    await uploadSingleFile(file);
+                }
+                showStatus(`Successfully uploaded ${files.length} photo(s)!`, 'success');
+                loadPhotos();
+            } catch (error) {
+                showStatus(`Upload failed: ${error.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                fileInput.value = '';
+            }
+        }
+        
+        async function uploadSingleFile(file) {
+            try {
+                // Step 1: Get upload URL from API
+                console.log('Requesting upload URL for:', file.name);
+                const response = await fetch(`${API_URL}/photos`, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        filename: file.name
+                    })
+                });
+                
+                console.log('API Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API error: ${response.status} - ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Upload URL received:', data.uploadUrl ? 'Yes' : 'No');
+                
+                // Step 2: Upload file to S3
+                const uploadResponse = await fetch(data.uploadUrl, {
+                    method: 'PUT',
+                    body: file,
+                    headers: {
+                        'Content-Type': file.type
+                    }
+                });
+                
+                console.log('S3 Upload status:', uploadResponse.status);
+                
+                if (!uploadResponse.ok) {
+                    const errorText = await uploadResponse.text();
+                    throw new Error(`S3 upload error: ${uploadResponse.status} - ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Upload error details:', error);
+                throw error;
+            }
+        }
+        
+        async function loadPhotos() {
+            try {
+                const response = await fetch(`${API_URL}/photos`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load photos: ${response.status}`);
+                }
+                
+                const photos = await response.json();
+                displayPhotos(photos);
+            } catch (error) {
+                showStatus(`Failed to load photos: ${error.message}`, 'error');
+            }
+        }
+        
+        function displayPhotos(photos) {
+            if (photos.length === 0) {
+                photosGrid.innerHTML = '<p style="text-align: center; color: #666; grid-column: 1/-1; padding: 40px; font-size: 1.1em;">📷 No photos uploaded yet. Start by uploading your first photo!</p>';
+                return;
+            }
+            
+            photosGrid.innerHTML = photos.map(photo => {
+                const imageUrl = `https://photo-gallery-data-bucket.s3.ap-south-1.amazonaws.com/${photo.s3Key}`;
+                return `
+                <div class="photo-card">
+                    <img src="${imageUrl}" alt="${photo.filename}" 
+                         style="width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: 15px;"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="width: 100%; height: 140px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-radius: 8px; display: none; align-items: center; justify-content: center; margin-bottom: 15px; color: #1e3c72; font-size: 2em;">
+                        📷
+                    </div>
+                    <div class="photo-info">
+                        <strong>${photo.filename}</strong><br>
+                        <small>📅 ${new Date(photo.uploadDate).toLocaleDateString()}</small><br>
+                        <small>🆔 ${photo.photoId.substring(0, 8)}...</small>
+                    </div>
+                </div>
+            `}).join('');
+        }
+        
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Load photos on page load
+        loadPhotos();
+    </script>
+</body>
+</html>
