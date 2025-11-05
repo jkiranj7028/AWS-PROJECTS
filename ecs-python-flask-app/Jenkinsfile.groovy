@@ -40,9 +40,8 @@ pipeline {
                 script {
                     // Use the ECR plugin to handle login
                     // This assumes Jenkins credentials (AWS_CREDS_ID) are set up
-                    docker.withRegistry("https://_ECR_REGISTRY_URL_", "ecr:${AWS_REGION}:${AWS_CREDS_ID}") {
-                        docker.image(IMAGE_TAG).push(ECR_IMAGE_URI)
-                        docker.image(IMAGE_TAG).push() 
+                    docker.withRegistry("https://${ECR_REGISTRY_URL}", "ecr:${AWS_REGION}:${AWS_CREDS_ID}") {
+                        docker.image(IMAGE_TAG).push("${env.BUILD_NUMBER}")
                     }
                 }
             }
