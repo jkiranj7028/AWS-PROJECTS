@@ -1,9 +1,7 @@
 pipeline {
     agent any // Assumes Jenkins agent has Docker, aws-cli, and git installed
     tools {
-        // Use the Docker tool configured in Jenkins
-        // The name 'docker' must match the name you gave it in Global Tool Configuration
-        tool 'docker'
+        dockerTool 'docker'
     }
     environment {
         // --- CONFIGURE THESE ---
