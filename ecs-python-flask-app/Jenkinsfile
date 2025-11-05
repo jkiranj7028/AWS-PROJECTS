@@ -1,0 +1,96 @@
+pipeline {
+    agent any // Assumes Jenkins agent has Docker, aws-cli, and git installed
+
+    environment {
+        // --- CONFIGURE THESE ---
+        AWS_REGION         = "ap-south-1"
+        AWS_ACCOUNT_ID     = "150965600049"
+        ECR_REPO_NAME      = "my-flask-app"
+        ECS_CLUSTER_NAME   = "ecs-my-flask-app" // The name of the cluster you created
+        ECS_SERVICE_NAME   = "ecs-my-flask-app"  // The name of the service you created
+        TASK_FAMILY_NAME   = "ecs-my-flask-app-task-def"          // The 'family' from your task-definition.json
+        AWS_CREDS_ID       = "aws-jenkins-credentials" // The ID of your AWS credentials in Jenkins
+        // --- END CONFIGURATION ---
+        
+        ECR_REGISTRY_URL   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        IMAGE_TAG          = "${ECR_REPO_NAME}:${env.BUILD_NUMBER}"
+        ECR_IMAGE_URI      = "${ECR_REGISTRY_URL}/${IMAGE_TAG}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out code...'
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "Building image: ${IMAGE_TAG}"
+                script {
+                    // Build the image
+                    docker.build(IMAGE_TAG, '.')
+                }
+            }
+        }
+
+        stage('Push to AWS ECR') {
+            steps {
+                echo "Pushing image ${ECR_IMAGE_URI} to ECR..."
+                script {
+                    // Use the ECR plugin to handle login
+                    // This assumes Jenkins credentials (AWS_CREDS_ID) are set up
+                    docker.withRegistry("https:${ECR_REGISTRY_URL}", "ecr:${AWS_REGION}:${AWS_CREDS_ID}") {
+                        // The built image (IMAGE_TAG) needs to be re-tagged to the full ECR URI
+                        docker.image(IMAGE_TAG).push() 
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to AWS ECS') {
+            steps {
+                echo "Deploying new version to ECS..."
+                // Use the AWS Credentials
+                withAWS(credentials: AWS_CREDS_ID, region: AWS_REGION) {
+                    script {
+                        // 1. Read the template task definition
+                        def taskDef = readJSON file: 'task-definition.json'
+
+                        // 2. Update the image field with the new ECR image URI
+                        taskDef.containerDefinitions[0].image = ECR_IMAGE_URI
+
+                        // 3. Write the new task definition to a file
+                        // The 'Pipeline Utility Steps' plugin is required for readJSON/writeJSON
+                        writeJSON file: 'new-task-def.json', json: taskDef
+
+                        // 4. Register the new task definition
+                        // This command returns the JSON output of the new task definition
+                        def registerOutput = sh(
+                            script: "aws ecs register-task-definition --cli-input-json file://new-task-def.json",
+                            returnStdout: true
+                        ).trim()
+                        
+                        // Parse the JSON output to get the new task definition ARN
+                        def newTaskArn = readJSON(text: registerOutput).taskDefinition.taskDefinitionArn
+                        echo "Registered new task definition: ${newTaskArn}"
+
+                        // 5. Update the service to use the new task definition
+                        sh "aws ecs update-service --cluster ${ECS_CLUSTER_NAME} --service ${ECS_SERVICE_NAME} --task-definition ${newTaskArn}"
+                        echo "Deployment complete!"
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Clean up the local docker image
+            sh "docker rmi ${IMAGE_TAG} || true"
+            sh "docker rmi ${ECR_IMAGE_URI} || true"
+            deleteDir() // Clean up the workspace
+        }
+    }
+}
