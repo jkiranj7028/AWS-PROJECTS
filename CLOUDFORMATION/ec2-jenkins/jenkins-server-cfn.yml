@@ -1,0 +1,199 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Deploys a secure, enterprise-ready Jenkins server on an EC2 instance 
+  with an IAM Role, Docker, and Git. (Sample Data Version)
+
+Parameters:
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+    Description: Select the VPC you want to deploy the Jenkins server into.
+    Default: 'vpc-011749974e90998ae' # <-- REPLACE THIS
+
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Select a public subnet (with an Internet Gateway) for the EC2 instance.
+    Default: 'subnet-01acb027d1ff08b21' # <-- REPLACE THIS
+
+  MyIP:
+    Type: String
+    Description: >-
+      Your current public IP address. This will be used to restrict SSH (22)
+      and Jenkins (8080) access.
+    Default: '49.37.148.50/24' # <-- REPLACE THIS with your own IP
+    ConstraintDescription: Must be a valid IP CIDR range (e.g., 1.2.3.4/32).
+
+  InstanceType:
+    Type: String
+    Description: EC2 instance type for the Jenkins server.
+    Default: 'm7i-flex.large' # (This is a good default, you can keep it)
+    AllowedValues:
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m7i-flex.large
+    ConstraintDescription: Must be a valid, approved instance type.
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of your existing EC2 KeyPair for SSH access.
+    Default: 'minikube-key' # <-- REPLACE THIS
+
+Resources:
+  # ------------------------------------------------------------------
+  # IAM Role and Instance Profile for the Jenkins EC2 Instance
+  # ------------------------------------------------------------------
+  JenkinsIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        - PolicyName: JenkinsCICDPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  # --- Permissions for ECS & ECR (from your previous request) ---
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:InitiateLayerUpload'
+                  - 'ecr:UploadLayerPart'
+                  - 'ecr:CompleteLayerUpload'
+                  - 'ecr:PutImage'
+                  - 'ecs:RegisterTaskDefinition'
+                  - 'ecs:UpdateService'
+                  - 'ecs:DescribeServices'
+                  - 'ecs:DescribeTaskDefinition'
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                  # --- CRITICAL: Allow Jenkins to pass roles to ECS Tasks ---
+                  - 'iam:PassRole'
+                Resource: '*'
+
+  JenkinsInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: '/'
+      Roles:
+        - !Ref JenkinsIAMRole
+
+  # ------------------------------------------------------------------
+  # Security Group for the Instance
+  # ------------------------------------------------------------------
+  JenkinsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Allow SSH (22) and Jenkins (8080) access'
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        # Rule for SSH
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref MyIP
+        # Rule for Jenkins UI
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Ref MyIP
+      Tags:
+        - Key: Name
+          Value: Jenkins-SG
+
+  # ------------------------------------------------------------------
+  # The EC2 Instance
+  # ------------------------------------------------------------------
+  JenkinsInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      # Use an SSM Parameter to dynamically get the latest Amazon Linux 2 AMI
+      ImageId: !Sub "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}"
+      IamInstanceProfile: !Ref JenkinsInstanceProfile
+      Tags:
+        - Key: Name
+          Value: Jenkins-Server
+      # Define the network interface to explicitly associate a public IP
+      NetworkInterfaces:
+        - DeviceIndex: "0"
+          AssociatePublicIpAddress: true
+          SubnetId: !Ref SubnetId
+          GroupSet:
+            - !Ref JenkinsSecurityGroup
+      # --- This UserData script installs and configures everything ---
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -ex
+          sudo dnf update -y
+          
+          # Install Java 17
+          dnf install -y java-17-amazon-corretto
+          
+          # Install Jenkins
+          wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+          rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+          # The default jenkins.repo file points to an old GPG key. We need to update it to use the new key.
+          # This is a critical fix for Amazon Linux 2023 and recent RHEL-based systems.
+          sed -i 's/jenkins.io.key/jenkins.io-2023.key/g' /etc/yum.repos.d/jenkins.repo
+          sudo dnf upgrade -y
+          sudo dnf install jenkins -y
+          
+          # Install Git
+          sudo dnf install git -y
+          
+          # Install Docker
+          #But most AWS-managed environments use the Moby engine (Docker-compatible, officially supported by AWS):
+          #sudo dnf install -y moby-engine moby-cli
+          sudo dnf install -y docker
+          sudo systemctl enable docker
+          sudo systemctl start docker
+          
+          # --- This is a critical step ---
+          # Add the 'jenkins' user to the 'docker' group so it can run Docker commands
+          sudo usermod -aG docker jenkins
+
+          # Start Jenkins
+          sudo systemctl enable jenkins
+          sudo systemctl start jenkins
+          # Restart Jenkins to apply the new 'docker' group membership
+          sudo systemctl restart jenkins
+
+Outputs:
+  InstanceId:
+    Description: The Instance ID of the new Jenkins server
+    Value: !Ref JenkinsInstance
+
+  JenkinsURL:
+    Description: The URL to access the Jenkins UI
+    Value: !Join 
+      - ''
+      - - 'http://'
+        - !GetAtt JenkinsInstance.PublicDnsName
+        - ':8080'
+
+  InitialPasswordCommand:
+    Description: Run this command on the EC2 instance to get the admin password
+    Value: !Join 
+      - ''
+      - - 'sudo cat /var/lib/jenkins/secrets/initialAdminPassword'
+
+  SSHCommand:
+    Description: The command to SSH into your instance
+    Value: !Join 
+      - ''
+      - - 'ssh -i <your-key.pem> ec2-user@'
+        - !GetAtt JenkinsInstance.PublicDnsName
