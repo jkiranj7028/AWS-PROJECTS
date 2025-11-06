@@ -13,10 +13,15 @@ This file defines the inputs for your configuration, similar to the Parameters s
 This file is identical to the one you provided, as it correctly defines the outputs for the project.
 
 How to Use These New Files
+
 1.Create a Directory: Make a new, empty directory for your Terraform project.
+
 2.Save the Files: Save the three code blocks above into that directory as main.tf, variables.tf, and outputs.tf.
+
 3.Update variables.tf: Edit the default values in variables.tf to match your AWS environment (VPC, Subnet, IP address, and Key Pair name).
+
 4.Initialize: Open a terminal in that directory and run terraform init.
+
 5.Plan: Run terraform plan to see what will be created.
 Apply: Run terraform apply to build the infrastructure.
 
