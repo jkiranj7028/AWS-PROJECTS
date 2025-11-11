@@ -1,0 +1,53 @@
+pipeline {
+  agent any
+  environment {
+    AWS_REGION = 'ap-south-1'
+    ECR_REGISTRY = '150965600049.dkr.ecr.ap-south-1.amazonaws.com'
+    REPO = 'myapp'
+    IMAGE_TAG = "green-${env.BUILD_NUMBER}"
+  }
+  stages {
+    stage('Checkout') { steps { checkout scm } }
+
+    stage('Build & Push Image') {
+      steps {
+        sh '''
+        docker build -t ${REPO}:${IMAGE_TAG} ./app
+        docker tag ${REPO}:${IMAGE_TAG} ${ECR_REGISTRY}/${REPO}:${IMAGE_TAG}
+        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+        docker push ${ECR_REGISTRY}/${REPO}:${IMAGE_TAG}
+        '''
+      }
+    }
+
+    stage('Deploy Green') {
+      steps {
+        sh '''
+        sed -i "s|150965600049.dkr.ecr.ap-south-1.amazonaws.com/cal-application:green|${ECR_REGISTRY}/${REPO}:${IMAGE_TAG}|g" manifests/green/deployment-green.yaml
+        ./scripts/deploy_green.sh
+        '''
+      }
+    }
+
+    stage('Smoke Test') {
+      steps { sh './scripts/smoke_test.sh' }
+    }
+
+    stage('Switch Traffic') {
+      steps { sh './scripts/switch_to_green.sh' }
+    }
+
+    stage('Cleanup Blue') {
+      steps { sh 'kubectl scale deployment myapp-blue --replicas=0 || true' }
+    }
+  }
+
+  post {
+    failure {
+      sh './scripts/rollback_to_blue.sh'
+    }
+    success {
+      echo "✅ Blue-Green Deployment completed successfully!"
+    }
+  }
+}

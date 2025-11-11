@@ -1,0 +1,23 @@
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # The name will be "my-app-blue" or "my-app-green"
+  name: "cal-application-{{ .Values.slot }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: cal-application
+      slot: "{{ .Values.slot }}" # Selector must match the pod labels
+  template:
+    metadata:
+      labels:
+        app: cal-application
+        slot: "{{ .Values.slot }}" # This label identifies the pods
+    spec:
+      containers:
+        - name: cal-application
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}

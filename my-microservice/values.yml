@@ -1,0 +1,11 @@
+# values.yaml
+replicaCount: 2
+slot: "blue" # Default slot (blue or green)
+
+image:
+  repository: "150965600049.dkr.ecr.ap-south-1.amazonaws.com/cal-application"
+  tag: "v1.0.0"
+
+service:
+  port: 80
+  targetPort: 8080
