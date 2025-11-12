@@ -22,6 +22,7 @@ REGION
 Create a role named lambda-cloudfront-updater-role with the following IAM policy in JSON,
 Attach this role to the Lambda function:
 
+'''
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -36,7 +37,7 @@ Attach this role to the Lambda function:
     }
   ]
 }
-
+'''
 
 ## Step 2: Create the Lambda Function
 Use Python 3.9 or newer runtime.
@@ -61,6 +62,8 @@ Name: ec2-start-update-cloudfront
 Event Source: AWS events
 Event Pattern in JSON:
 (Replace the instance ID with yours.)
+
+'''
 {
   "source": ["aws.ec2"],
   "detail-type": ["EC2 Instance State-change Notification"],
@@ -69,6 +72,7 @@ Event Pattern in JSON:
     "instance-id": ["EC2_INSTANCE_ID"]
   }
 }
+'''
 
 ## Step 5: Test the Flow
 	1.	Stop and start your EC2 instance.
@@ -77,12 +81,3 @@ Event Pattern in JSON:
 You should see:
 Origin Domain: ec2-NEW-PUBLIC-DNS.ap-south-1.compute.amazonaws.com
     4.	CloudFront will deploy the updated config automatically (~1–2 minutes).
-
-{
-  "source": ["aws.ec2"],
-  "detail-type": ["EC2 Instance State-change Notification"],
-  "detail": {
-    "state": ["running"],
-    "instance-id": ["i-0a1234b5678c9d0ef"]
-  }
-}
