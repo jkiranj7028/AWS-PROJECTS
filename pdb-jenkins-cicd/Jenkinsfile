@@ -16,6 +16,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
+                  echo "Current directory: $(pwd)"
+                  echo "Listing files:"
+                  ls -al
                   echo "Building Docker image..."
                   docker build -t $IMAGE .
                 '''
