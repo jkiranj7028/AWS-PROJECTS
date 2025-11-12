@@ -11,12 +11,12 @@ You’re a DevOps Engineer managing a high-traffic microservice (web-app) deploy
     2.	Prevent downtime during deployment or cluster maintenance.
     3.	Automatically apply or update your PDB before rollout.
 
-Folder Structure Example
-    ├── Jenkinsfile
-    ├── manifests/
-    │   ├── deployment.yaml
-    │   ├── service.yaml
-    │   └── pdb.yaml
+    Folder Structure Example
+        ├── Jenkinsfile
+        ├── manifests/
+        │   ├── deployment.yaml
+        │   ├── service.yaml
+        │   └── pdb.yaml
 
 Guarantee:
 At least 2 pods must be running even during upgrades, evictions, or autoscaler activity.
