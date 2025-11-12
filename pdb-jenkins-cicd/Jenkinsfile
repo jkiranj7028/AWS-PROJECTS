@@ -18,7 +18,7 @@ pipeline {
             steps {
                 dir('pdb-jenkins-cicd') {
                     stage('Build Docker Image') {
-                        sh "echo 'Building Docker image in $(pwd)...'"
+                        sh 'echo "Building Docker image in $(pwd)..."'
                         sh "docker build -t $IMAGE ."
                     }
     
