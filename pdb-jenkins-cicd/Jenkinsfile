@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG = credentials('AWS_CREDS_ID')
-        //KUBECONFIG = credentials('JENKINS_CRED')  // Jenkins credential ID for kubeconfig
+        //KUBECONFIG = credentials('AWS_CREDS_ID')
+        KUBECONFIG = credentials('admin-ec2-ecs-eks-key')
+        KUBECONFIG = credentials('JENKINS_CRED')  // Jenkins credential ID for kubeconfig
         IMAGE = "docker7028/cal-app-v1:${BUILD_NUMBER}"  // Replace myrepo with your Docker/ECR repo
     }
 
@@ -51,7 +52,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying cal-app-v1..."
-                    withCredentials([file(credentialsId: 'AWS_CREDS_ID', variable: 'KUBECONFIG_FILE')]) {
+                    withCredentials([file(credentialsId: 'admin-ec2-ecs-eks-key', variable: 'KUBECONFIG_FILE')]) {
                         sh "export KUBECONFIG=${KUBECONFIG_FILE}"
                         sh "kubectl set image deployment/cal-app-v1 cal=$IMAGE --record"
                         sh "kubectl rollout status deployment/cal-app-v1 --timeout=180s"
