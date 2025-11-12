@@ -16,11 +16,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                  echo "Current directory: $(pwd)"
-                  echo "Listing files:"
-                  ls -al
-                  echo "Building Docker image..."
-                  docker build -t $IMAGE -f /pdb-jenkins-cicd/Dockerfile .
+                  cd pdb-jenkins-cicd
+                  echo "Building Docker image in $(pwd)..."
+                  docker build -t $IMAGE .
                 '''
             }
         }
