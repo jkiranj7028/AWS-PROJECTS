@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         KUBECONFIG = credentials('JENKINS_CRED') // Jenkins credential ID
-        IMAGE = "docker7028/calculator-app:${BUILD_NUMBER}"
+        IMAGE = "docker7028/docker7028/docker-hub-repo/calculator-app:${BUILD_NUMBER}"
     }
 
     stages {
@@ -16,7 +16,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                  echo "Building Docker image..."
+                  cd pdb-jenkins-cicd
+                  echo "Building Docker image in $(pwd)..."
                   docker build -t $IMAGE .
                 '''
             }
