@@ -1,7 +1,7 @@
 pipeline {
     agent none
     tools {
-        dockerTool '20.10.7'
+        dockerTool 'Docker-20.10.7'
     }
     stages {
         stage('Build') {
