@@ -1,9 +1,9 @@
-pipeline {
+ppipeline {
     agent any
 
     environment {
         KUBECONFIG = credentials('JENKINS_CRED') // Jenkins credential ID
-        IMAGE = "docker7028/docker-hub-repo/calculator-app:${BUILD_NUMBER}"
+        IMAGE = "docker7028/calculator-app:${BUILD_NUMBER}"
     }
 
     stages {
@@ -83,3 +83,4 @@ pipeline {
         }
     }
 }
+u
