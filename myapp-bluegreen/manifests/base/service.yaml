@@ -1,15 +1,13 @@
-# Placeholder for service.yaml
+# kubernetes/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: myapp-svc
-  labels:
-    app: myapp
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   ports:
-    - port: 80
-      targetPort: 8080
+  - port: 80
+    targetPort: 8080
   selector:
     app: myapp
-    version: blue
+    color: blue # Initial color

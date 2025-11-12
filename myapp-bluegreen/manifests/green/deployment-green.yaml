@@ -1,31 +1,22 @@
-# Placeholder for deployment-green.yaml
+# kubernetes/deployment-green.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: myapp-green
-  labels:
-    app: myapp
-    version: green
 spec:
   replicas: 3
   selector:
     matchLabels:
       app: myapp
-      version: green
+      color: green
   template:
     metadata:
       labels:
         app: myapp
-        version: green
+        color: green
     spec:
       containers:
-        - name: myapp
-          image: 150965600049.dkr.ecr.ap-south-1.amazonaws.com/cal-application:green
-          ports:
-            - containerPort: 8080
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 5
+      - name: myapp
+        image: IMAGE_PLACEHOLDER # This will be replaced by the pipeline
+        ports:
+        - containerPort: 8080

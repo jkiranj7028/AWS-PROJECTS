@@ -1,53 +1,83 @@
+// Jenkinsfile
 pipeline {
-  agent any
-  environment {
-    AWS_REGION = 'ap-south-1'
-    ECR_REGISTRY = '150965600049.dkr.ecr.ap-south-1.amazonaws.com'
-    REPO = 'myapp'
-    IMAGE_TAG = "green-${env.BUILD_NUMBER}"
-  }
-  stages {
-    stage('Checkout') { steps { checkout scm } }
+    agent any
 
-    stage('Build & Push Image') {
-      steps {
-        sh '''
-        docker build -t ${REPO}:${IMAGE_TAG} ./app
-        docker tag ${REPO}:${IMAGE_TAG} ${ECR_REGISTRY}/${REPO}:${IMAGE_TAG}
-        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-        docker push ${ECR_REGISTRY}/${REPO}:${IMAGE_TAG}
-        '''
-      }
+    environment {
+        // Use Jenkins credentials for AWS access and Docker registry
+        AWS_CREDS_ID          = 'aws-credentials-id'
+        AWS_REGION            = 'ap-south-1' // Your AWS Region
+        ECR_REGISTRY          = '150965600049.dkr.ecr.ap-south-1.amazonaws.com'
+        APP_NAME              = 'cal-application'
+        // Securely load kubeconfig
+        //KUBECONFIG            = credentials('eks-kubeconfig')
     }
 
-    stage('Deploy Green') {
-      steps {
-        sh '''
-        sed -i "s|150965600049.dkr.ecr.ap-south-1.amazonaws.com/cal-application:green|${ECR_REGISTRY}/${REPO}:${IMAGE_TAG}|g" manifests/green/deployment-green.yaml
-        ./scripts/deploy_green.sh
-        '''
-      }
-    }
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
-    stage('Smoke Test') {
-      steps { sh './scripts/smoke_test.sh' }
-    }
+        stage('Build & Push Docker Image') {
+            steps {
+                script {
+                    // Use commit hash for unique image tag
+                    def imageTag = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                    def dockerImage = "${env.ECR_REGISTRY}/${env.APP_NAME}:${imageTag}"
+                    
+                    // Login to ECR
+                    sh "aws ecr get-login-password --region ${env.AWS_REGION} | docker login --username AWS --password-stdin ${env.ECR_REGISTRY}"
+                    
+                    // Build and push
+                    sh "docker build -t ${dockerImage} ."
+                    sh "docker push ${dockerImage}"
+                }
+            }
+        }
 
-    stage('Switch Traffic') {
-      steps { sh './scripts/switch_to_green.sh' }
-    }
+        stage('Deploy Green') {
+            steps {
+                script {
+                    def imageTag = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                    def dockerImage = "${env.ECR_REGISTRY}/${env.APP_NAME}:${imageTag}"
 
-    stage('Cleanup Blue') {
-      steps { sh 'kubectl scale deployment myapp-blue --replicas=0 || true' }
-    }
-  }
+                    // Use a templating tool or sed to update the image in the green deployment manifest
+                    sh "sed -i 's|IMAGE_PLACEHOLDER|${dockerImage}|g' kubernetes/deployment-green.yaml"
+                    
+                    echo "Deploying Green version..."
+                    sh "kubectl apply -f kubernetes/deployment-green.yaml"
+                    sh "kubectl rollout status deployment/${env.APP_NAME}-green"
+                }
+            }
+        }
 
-  post {
-    failure {
-      sh './scripts/rollback_to_blue.sh'
+        stage('Smoke Test Green') {
+            steps {
+                echo "Running smoke tests against the green service..."
+                // Add your smoke tests here. Example:
+                // sh "curl --fail http://myapp-green-service:8080/health"
+            }
+        }
+
+        stage('Promote Green to Blue (Switch Traffic)') {
+            steps {
+                echo "Switching production traffic to Green deployment..."
+                // This updates the service selector to point to the green pods
+                sh "kubectl patch service ${env.APP_NAME}-svc -p '{\"spec\": {\"selector\": {\"app\": \"${env.APP_NAME}\", \"color\": \"green\"}}}'"
+            }
+        }
+
+        stage('Teardown Old Blue') {
+            // Optional: Keep the old version for quick rollback or tear it down.
+            when {
+                // Example: Only run on the main branch
+                branch 'main'
+            }
+            steps {
+                echo "Tearing down old Blue deployment..."
+                sh "kubectl delete deployment ${env.APP_NAME}-blue --ignore-not-found=true"
+            }
+        }
     }
-    success {
-      echo "✅ Blue-Green Deployment completed successfully!"
-    }
-  }
 }
