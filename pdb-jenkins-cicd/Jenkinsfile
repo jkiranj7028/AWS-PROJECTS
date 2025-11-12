@@ -46,14 +46,14 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh '''
-                  echo "Deploying cal-app-v1..."
-                  withCredentials([file(credentialsId: 'AWS_CREDS_ID', variable: 'KUBECONFIG_FILE')])
-                    export KUBECONFIG=${KUBECONFIG_FILE}
-                    kubectl set image deployment/cal-app-v1 cal=$IMAGE --record
-                    kubectl rollout status deployment/cal-app-v1 --timeout=180s
+                
+                echo "Deploying cal-app-v1..."
+                withCredentials([file(credentialsId: 'AWS_CREDS_ID', variable: 'KUBECONFIG_FILE')]) {
+                    sh "export KUBECONFIG=${KUBECONFIG_FILE}"
+                    sh "kubectl set image deployment/cal-app-v1 cal=$IMAGE --record"
+                    sh "kubectl rollout status deployment/cal-app-v1 --timeout=180s"
 
-                '''
+                }
                     
             }
         }
