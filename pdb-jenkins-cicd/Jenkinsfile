@@ -35,7 +35,7 @@ pipeline {
 
         stage('Deploy and Verify on Kubernetes') {
             // Use a Docker image that has kubectl installed
-            agent { docker { image 'bitnami/kubectl:latest' } }
+            agent { dockerContainer 'bitnami/kubectl:latest' }
             steps {
                 // Correctly load the kubeconfig file credential for this stage
                 withCredentials([file(credentialsId: 'admin-ec2-ecs-eks-key', variable: 'KUBECONFIG_FILE')]) {
