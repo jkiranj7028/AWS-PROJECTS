@@ -1,9 +1,9 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: web-app-pdb
+  name: calculator-app-pdb
 spec:
   minAvailable: 2
   selector:
     matchLabels:
-      app: web-app
+      app: calculator-app
