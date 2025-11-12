@@ -57,27 +57,26 @@ Value: (your CloudFront distribution ID)
 
 ## Step 4: Create EventBridge Rule (Trigger)
 Go to Amazon EventBridge → Rules → Create Rule
-
 Name: ec2-start-update-cloudfront
 Event Source: AWS events
 Event Pattern in JSON:
 (Replace the instance ID with yours.)
 
-'''
-    {
-    "source": ["aws.ec2"],
-    "detail-type": ["EC2 Instance State-change Notification"],
-    "detail": {
-        "state": ["running"],
-        "instance-id": ["EC2_INSTANCE_ID"]
-    }
-    }
-'''
+    '''
+        {
+        "source": ["aws.ec2"],
+        "detail-type": ["EC2 Instance State-change Notification"],
+        "detail": {
+            "state": ["running"],
+            "instance-id": ["EC2_INSTANCE_ID"]
+        }
+        }
+    '''
 
 ## Step 5: Test the Flow
-	1.	Stop and start your EC2 instance.
-	2.	Wait ~1 minute.
-	3.	Go to CloudFront → Distribution → Origins —
-    You should see:
-    Origin Domain: ec2-NEW-PUBLIC-DNS.ap-south-1.compute.amazonaws.com
-    4.  CloudFront will deploy the updated config automatically (~1–2 minutes).
+1.	Stop and start your EC2 instance.
+2.	Wait ~1 minute.
+3.	Go to CloudFront → Distribution → Origins —
+You should see:
+Origin Domain: ec2-NEW-PUBLIC-DNS.ap-south-1.compute.amazonaws.com
+4.  CloudFront will deploy the updated config automatically (~1–2 minutes).
