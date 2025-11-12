@@ -78,3 +78,11 @@ You should see:
 Origin Domain: ec2-NEW-PUBLIC-DNS.ap-south-1.compute.amazonaws.com
     4.	CloudFront will deploy the updated config automatically (~1–2 minutes).
 
+{
+  "source": ["aws.ec2"],
+  "detail-type": ["EC2 Instance State-change Notification"],
+  "detail": {
+    "state": ["running"],
+    "instance-id": ["i-0a1234b5678c9d0ef"]
+  }
+}
