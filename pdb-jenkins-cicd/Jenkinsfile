@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG = credentials('JENKINS_CRED')  // Jenkins credential ID
-        IMAGE = "docker7028/docker-hub-repo:calculator-app:${BUILD_NUMBER}"
+        KUBECONFIG = credentials('JENKINS_CRED') // Jenkins credential ID
+        IMAGE = "docker7028/calculator-app:${BUILD_NUMBER}"
     }
 
     stages {
@@ -47,8 +47,8 @@ pipeline {
             steps {
                 sh '''
                   echo "Deploying app..."
-                  kubectl set image deployment/docker-hub-repo:calculator-app web=$IMAGE --record
-                  kubectl rollout status deployment/docker-hub-repo:calculator-app --timeout=180s
+                  kubectl set image deployment/calculator-app web=$IMAGE --record
+                  kubectl rollout status deployment/calculator-app --timeout=180s
                 '''
             }
         }
@@ -57,7 +57,7 @@ pipeline {
             steps {
                 sh '''
                   echo "Checking PDB status..."
-                  kubectl get pdb docker-hub-repo:calculator-app-pdb -o yaml | grep -E "currentHealthy|minAvailable|maxUnavailable"
+                  kubectl get pdb calculator-app-pdb -o yaml | grep -E "currentHealthy|minAvailable|maxUnavailable"
                 '''
             }
         }
@@ -66,8 +66,8 @@ pipeline {
             steps {
                 sh '''
                   echo "Running smoke test..."
-                  kubectl run test-pod --rm -i --restart=Never --image=curlimages/curl \
-                    -- curl -s http://docker-hub-repo:calculator-app-service
+                  kubectl run test-pod --rm -i --restart=Never --image=curlimages/curl -- \
+                    curl -s http://calculator-app-service
                 '''
             }
         }
