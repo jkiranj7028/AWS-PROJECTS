@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: calculator-app
+  name: cal-app-v1
   labels:
-    app: calculator-app
+    app: cal-app-v1
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: calculator-app
+      app: cal-app-v1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -17,10 +17,10 @@ spec:
   template:
     metadata:
       labels:
-        app: calculator-app
+        app: cal-app-v1
     spec:
       containers:
-        - name: web
-          image: docker7028/calculator-app:latest
+        - name: cal
+          image: docker7028/cal-app-v1:latest
           ports:
             - containerPort: 80
