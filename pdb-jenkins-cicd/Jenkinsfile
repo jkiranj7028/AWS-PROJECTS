@@ -38,7 +38,7 @@ pipeline {
             steps {
                 sh '''
                   echo "Applying PDB to ensure safe disruptions..."
-                  kubectl apply -f manifests/pdb.yaml
+                  kubectl apply -f ../pdb.yaml
                   kubectl get pdb
                 '''
             }
