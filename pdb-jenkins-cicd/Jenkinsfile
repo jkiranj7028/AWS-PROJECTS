@@ -20,7 +20,7 @@ pipeline {
                   echo "Listing files:"
                   ls -al
                   echo "Building Docker image..."
-                  docker build -t $IMAGE .
+                  docker build -t $IMAGE -f /pdb-jenkins-cicd/Dockerfile .
                 '''
             }
         }
