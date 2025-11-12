@@ -4,7 +4,7 @@ pipeline {
     environment {
         //KUBECONFIG = credentials('AWS_CREDS_ID')
         KUBECONFIG = credentials('admin-ec2-ecs-eks-key')
-        KUBECONFIG = credentials('JENKINS_CRED')  // Jenkins credential ID for kubeconfig
+        //KUBECONFIG = credentials('JENKINS_CRED')  // Jenkins credential ID for kubeconfig
         IMAGE = "docker7028/cal-app-v1:${BUILD_NUMBER}"  // Replace myrepo with your Docker/ECR repo
     }
 
