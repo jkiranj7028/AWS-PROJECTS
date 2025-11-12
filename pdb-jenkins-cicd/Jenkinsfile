@@ -34,42 +34,52 @@ pipeline {
             }
         }
 
-        stage('Apply Pod Disruption Budget') {
-            steps {
-                sh '''
-                  echo "Applying PDB to ensure safe disruptions..."
-                  kubectl apply -f manifests/pdb.yaml
-                  kubectl get pdb
-                '''
+        // Group all Kubernetes stages under a single agent with the required tools
+        stage('Deploy to Kubernetes Cluster') {
+            agent {
+                // Use a Docker image that has kubectl installed
+                docker { image 'bitnami/kubectl:latest' }
             }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                sh '''
-                  echo "Deploying app..."
-                  kubectl set image deployment/calculator-app web=$IMAGE --record
-                  kubectl rollout status deployment/calculator-app --timeout=180s
-                '''
-            }
-        }
-
-        stage('Verify PDB Enforcement') {
-            steps {
-                sh '''
-                  echo "Checking PDB status..."
-                  kubectl get pdb calculator-app-pdb -o yaml | grep -E "currentHealthy|minAvailable|maxUnavailable"
-                '''
-            }
-        }
-
-        stage('Post-Deployment Smoke Test') {
-            steps {
-                sh '''
-                  echo "Running smoke test..."
-                  kubectl run test-pod --rm -i --restart=Never --image=curlimages/curl -- \
-                    curl -s http://calculator-app-service
-                '''
+            stages {
+                stage('Apply Pod Disruption Budget') {
+                    steps {
+                        sh '''
+                          cd pdb-jenkins-cicd
+                          echo "Applying PDB to ensure safe disruptions..."
+                          kubectl apply -f manifests/pdb.yaml
+                          kubectl get pdb
+                        '''
+                    }
+                }
+        
+                stage('Deploy to Kubernetes') {
+                    steps {
+                        sh '''
+                          echo "Deploying app..."
+                          kubectl set image deployment/calculator-app web=$IMAGE --record
+                          kubectl rollout status deployment/calculator-app --timeout=180s
+                        '''
+                    }
+                }
+        
+                stage('Verify PDB Enforcement') {
+                    steps {
+                        sh '''
+                          echo "Checking PDB status..."
+                          kubectl get pdb calculator-app-pdb -o yaml | grep -E "currentHealthy|minAvailable|maxUnavailable"
+                        '''
+                    }
+                }
+        
+                stage('Post-Deployment Smoke Test') {
+                    steps {
+                        sh '''
+                          echo "Running smoke test..."
+                          kubectl run test-pod --rm -i --restart=Never --image=curlimages/curl -- \
+                            curl -s http://calculator-app-service
+                        '''
+                    }
+                }
             }
         }
     }
