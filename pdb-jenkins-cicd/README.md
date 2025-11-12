@@ -6,10 +6,10 @@
 
 You’re a DevOps Engineer managing a high-traffic microservice (web-app) deployed on Amazon EKS or Kubeadm cluster.
 
-You want to:
-	- 1.	Deploy a new image version safely.
-	- 2.	Prevent downtime during deployment or cluster maintenance.
-	- 3.	Automatically apply or update your PDB before rollout.
+    You want to:
+    1.	Deploy a new image version safely.
+    2.	Prevent downtime during deployment or cluster maintenance.
+    3.	Automatically apply or update your PDB before rollout.
 
 Folder Structure Example
     ├── Jenkinsfile
