@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-api-ingress
+  annotations:
+    # This annotation is specific to NGINX and rewrites the path
+    # /api/users becomes /users when sent to the api-service
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx # Tell it to use the NGINX controller
+  rules:
+  - http:
+      paths:
+      # --- Rule for the API ---
+      # Send /api/* to the api-service
+      - path: /api(/|$)(.*) # Match /api, /api/, or /api/anything
+        pathType: Prefix
+        backend:
+          service:
+            name: "api-service"
+            port:
+              number: 80
+      # --- Rule for the Web App ---
+      # Send everything else (/) to the web-service
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: "web-service"
+            port:
+              number: 80

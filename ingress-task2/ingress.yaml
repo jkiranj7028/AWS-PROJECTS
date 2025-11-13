@@ -1,0 +1,69 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ecommerce-ingress
+  annotations:
+    # This annotation is crucial for path-based routing.
+    # It tells NGINX to strip the routing prefix (/auth, /users, etc.)
+    # before sending the request to the microservice.
+    # e.g., /auth/login becomes /login
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  # We use the NGINX controller we installed in Step 2
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - your-domain.com # Replace with your actual domain
+    secretName: ecommerce-tls-secret # The secret containing your TLS cert and key
+  rules:
+  - http:
+      paths:
+      # --- Auth Rule ---
+      # Matches /auth, /auth/, or /auth/anything
+      - path: /auth(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: auth-svc
+            port:
+              number: 80
+
+      # --- User Rule ---
+      # Matches /users, /users/, or /users/anything
+      - path: /users(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: user-svc
+            port:
+              number: 80
+
+      # --- Product Rule ---
+      # Matches /products, /products/, or /products/anything
+      - path: /products(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: product-svc
+            port:
+              number: 80
+              
+      # --- Order Rule ---
+      # Matches /orders, /orders/, or /orders/anything
+      - path: /orders(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: order-svc
+            port:
+              number: 80
+
+      # --- Frontend Rule (Default/Catch-all) ---
+      # MUST BE LAST. Matches anything not caught by the rules above.
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-svc
+            port:
+              number: 80
