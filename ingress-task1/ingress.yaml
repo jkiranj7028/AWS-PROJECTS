@@ -1,16 +1,21 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  namespace: prod-namespace
   name: web-api-ingress
   annotations:
     # Annotations for the AWS Load Balancer Controller
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:150965600049:certificate/57483fa6-cafa-445f-971f-86b2de206959
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-Res-2021-06
 spec:
   # Tell it to use the AWS Load Balancer controller
   ingressClassName: alb
   rules:
-  - http:
+  - host: calculator.devopscloudai.com
+    http:
       paths:
       # --- Rule for the API ---
       # Send /api/* to the api-service. More specific paths must come first for ALB.

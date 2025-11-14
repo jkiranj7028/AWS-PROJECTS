@@ -191,3 +191,18 @@ Deploy ingress.yml file:
                 name: game-2048-service
                 port:
                 number: 80
+
+### **Note:** Warning: annotation "kubernetes.io/ingress.class" is deprecated, please use 'spec.ingressClassName' instead
+
+### In summary:
+Use spec.ingressClassName for new Ingress configurations as it is the standard and recommended approach.
+Be aware of kubernetes.io/ingress.class for existing configurations and when dealing with older Ingress controllers, but migrate to spec.ingressClassName when possible.
+
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: my-app-ingress
+    spec:
+      ingressClassName: my-ingress-class # Reference the IngressClass name
+      rules:
+        # ...

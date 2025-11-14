@@ -74,6 +74,7 @@ Save this as `microservices.yaml`:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: stag-microservices
   name: frontend-deployment
 spec:
   replicas: 1
@@ -93,6 +94,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: stag-microservices
   name: frontend-svc
 spec:
   selector:
@@ -107,6 +109,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: stag-microservices
   name: auth-deployment
 spec:
   replicas: 1
@@ -126,6 +129,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: stag-microservices
   name: auth-svc
 spec:
   selector:
@@ -140,6 +144,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: stag-microservices
   name: user-deployment
 spec:
   replicas: 1
@@ -159,6 +164,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: stag-microservices
   name: user-svc
 spec:
   selector:
@@ -173,6 +179,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: stag-microservices
   name: product-deployment
 spec:
   replicas: 1
@@ -192,6 +199,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: stag-microservices
   name: product-svc
 spec:
   selector:
@@ -206,6 +214,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: stag-microservices
   name: order-deployment
 spec:
   replicas: 1
@@ -225,6 +234,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: stag-microservices
   name: order-svc
 spec:
   selector:
@@ -359,3 +369,8 @@ kubectl apply -f ingress.yaml
     ```
 
 You have now successfully built a 5-microservice project with a single Ingress routing all traffic\!
+
+
+kubectl get ingress
+kubectl get ingress -n stag-microservices
+

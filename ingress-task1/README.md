@@ -17,6 +17,7 @@ First, we need our two applications running. We'll create a combined file for ea
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: prod-namespace
   name: web-deployment
 spec:
   replicas: 2
@@ -39,6 +40,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: prod-namespace
   name: web-service
 spec:
   selector:
@@ -54,6 +56,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: prod-namespace
   name: api-deployment
 spec:
   replicas: 1
@@ -72,6 +75,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: prod-namespace
   name: api-service
 spec:
   selector:
@@ -267,4 +271,3 @@ You **must install** a controller in your cluster for Ingress to work. A fresh E
 | **Service Consolidation** | Expose 10 different applications (Services) through one single IP address. |
 
 -----
-
