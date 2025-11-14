@@ -36,16 +36,17 @@ You also need `kubectl` (the Kubernetes command-line tool) installed and configu
 
 #### Step 2: Install the Ingress Controller (NGINX)
 
-The `Ingress` resource (the "rules") is useless without an **Ingress Controller** (the "brain") to enforce them. We will install the most popular one, `ingress-nginx`, using Helm.
+The `Ingress` resource (the "rules") is useless without an **Ingress Controller** (the "brain") to enforce them. For AWS, we will install the **AWS Load Balancer Controller** using Helm.
 
 ```bash
-# 1. Add the NGINX Helm repository
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+# 1. Add the EKS chart repository
+helm repo add eks https://aws.github.io/eks-charts
 helm repo update
 
-# 2. Install the controller in its own namespace
-helm install ingress-nginx ingress-nginx/ingress-nginx \
-  --namespace ingress-nginx --create-namespace
+# 2. Install the controller (ensure prerequisites like IAM roles are complete)
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=<YOUR_CLUSTER_NAME>
 ```
 
 Wait about 1-2 minutes for the controller to get an external IP address. You can check its status:

@@ -3,26 +3,28 @@ kind: Ingress
 metadata:
   name: web-api-ingress
   annotations:
-    # This annotation is specific to NGINX and rewrites the path
-    # /api/users becomes /users when sent to the api-service
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # Annotations for the AWS Load Balancer Controller
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
 spec:
-  ingressClassName: nginx # Tell it to use the NGINX controller
+  # Tell it to use the AWS Load Balancer controller
+  ingressClassName: alb
   rules:
   - http:
       paths:
       # --- Rule for the API ---
-      # Send /api/* to the api-service
-      - path: /api(/|$)(.*) # Match /api, /api/, or /api/anything
+      # Send /api/* to the api-service. More specific paths must come first for ALB.
+      - path: /api/*
         pathType: Prefix
         backend:
           service:
             name: "api-service"
             port:
               number: 80
+              
       # --- Rule for the Web App ---
-      # Send everything else (/) to the web-service
-      - path: /
+      # Send everything else to the web-service
+      - path: /*
         pathType: Prefix
         backend:
           service:

@@ -1,5 +1,183 @@
-An Ingress in Kubernetes isn't a single "thing" but a system of components that work together to manage external access (like web traffic) to services within your cluster.
+### An Ingress in Kubernetes isn't a single "thing" but a system of components that work together to manage external access (like web traffic) to services within your cluster.
 
+### \#\# 🏗️ Real-Time Basic Project: Web + API
+
+Let's build a simple project with a `web` frontend and an `api` backend. We want to route traffic based on the URL path:
+
+  * `http://my-app.com/` -\> goes to the **web app**.
+  * `http://my-app.com/api/` -\> goes to the **api service**.
+
+#### Step 1: The Deployments and Services
+
+First, we need our two applications running. We'll create a combined file for each.
+
+**`web-deployment.yaml`**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: "gcr.io/google-samples/hello-app:1.0" # A simple web server
+```
+
+**`web-service.yaml`**
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 8080
+```
+
+**`api-app.yaml`**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: "gcr.io/google-samples/hello-app:2.0" # A different version
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+spec:
+  selector:
+    app: api
+  ports:
+  - port: 80
+    targetPort: 8080
+```
+
+*Apply these files:*
+
+```bash
+kubectl apply -f web-app.yaml
+kubectl apply -f api-app.yaml
+```
+
+#### Step 2: Install an Ingress Controller
+
+For AWS, we'll install the **AWS Load Balancer Controller**. This is a **one-time setup** for your EKS cluster. You must complete the prerequisites (like creating an IAM OIDC provider and an IAM role) from the official AWS documentation.
+
+```bash
+# A simplified Helm install command (replace <YOUR_CLUSTER_NAME> and <YOUR_ACCOUNT_ID>)
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=<YOUR_CLUSTER_NAME> \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller
+```
+
+#### Step 3: Create the `Ingress` Resource (The Rules)
+
+This YAML file ties everything together.
+
+**`my-project-ingress.yaml`**
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-api-ingress
+  annotations:
+    # This annotation is specific to NGINX and rewrites the path
+    # /api/users becomes /users when sent to the api-service
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx # Tell it to use the NGINX controller
+  rules:
+  - http:
+      paths:
+      # --- Rule for the API ---
+      # Send /api/* to the api-service
+      - path: /api(/|$)(.*) # Match /api, /api/, or /api/anything
+        pathType: Prefix
+        backend:
+          service:
+            name: "api-service"
+            port:
+              number: 80
+              
+      # --- Rule for the Web App ---
+      # Send everything else (/) to the web-service
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: "web-service"
+            port:
+              number: 80
+```
+
+*Apply this file:*
+
+```bash
+kubectl apply -f my-project-ingress.yaml
+```
+
+#### Step 4: Test it\!
+
+1.  Find your Ingress IP address (this is the load balancer the controller created):
+
+    ```bash
+    kubectl get ingress -n ingress-nginx
+    # Wait a minute or two for the 'ADDRESS' field to be populated
+    ```
+
+2.  Let's say the IP is `123.45.67.89`.
+
+3.  **Test the web app:**
+
+    ```bash
+    # This request goes to the '/' path
+    curl http://123.45.67.89/
+    ```
+
+    *Output:* `Hello, world! Version: 1.0.0` (from the `web-service`)
+
+4.  **Test the API:**
+
+    ```bash
+    # This request goes to the '/api/' path
+    curl http://123.45.67.89/api/some/path
+    ```
+
+    *Output:* `Hello, world! Version: 2.0.0` (from the `api-service`)
+
+-----------------------------------------------------------------------
 The system is made of two main components:
 
 1.  **The `Ingress` Resource:** A YAML file where you define the *rules* for routing traffic.
@@ -90,177 +268,3 @@ You **must install** a controller in your cluster for Ingress to work. A fresh E
 
 -----
 
-### \#\# 🏗️ Real-Time Basic Project: Web + API
-
-Let's build a simple project with a `web` frontend and an `api` backend. We want to route traffic based on the URL path:
-
-  * `http://my-app.com/` -\> goes to the **web app**.
-  * `http://my-app.com/api/` -\> goes to the **api service**.
-
-#### Step 1: The Deployments and Services
-
-First, we need our two applications running.
-
-**`web-deployment.yaml`**
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: web-deployment
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: web
-  template:
-    metadata:
-      labels:
-        app: web
-    spec:
-      containers:
-      - name: web
-        image: "gcr.io/google-samples/hello-app:1.0" # A simple web server
-```
-
-**`web-service.yaml`**
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: web-service
-spec:
-  selector:
-    app: web
-  ports:
-  - port: 80
-    targetPort: 8080
-```
-
-**`api-app.yaml`**
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: api-deployment
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: api
-  template:
-    metadata:
-      labels:
-        app: api
-    spec:
-      containers:
-      - name: api
-        image: "gcr.io/google-samples/hello-app:2.0" # A different version
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: api-service
-spec:
-  selector:
-    app: api
-  ports:
-  - port: 80
-    targetPort: 8080
-```
-
-*Apply these files:*
-
-```bash
-kubectl apply -f web-app.yaml
-kubectl apply -f api-app.yaml
-```
-
-#### Step 2: Install an Ingress Controller
-
-We'll use the popular NGINX controller. This is a **one-time setup** for your cluster.
-
-```bash
-# Install using Helm (the easiest way)
-helm upgrade --install ingress-nginx ingress-nginx \
-  --repo https://kubernetes.github.io/ingress-nginx \
-  --namespace ingress-nginx --create-namespace
-```
-
-#### Step 3: Create the `Ingress` Resource (The Rules)
-
-This YAML file ties everything together.
-
-**`my-project-ingress.yaml`**
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: web-api-ingress
-  annotations:
-    # This annotation is specific to NGINX and rewrites the path
-    # /api/users becomes /users when sent to the api-service
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-spec:
-  ingressClassName: nginx # Tell it to use the NGINX controller
-  rules:
-  - http:
-      paths:
-      # --- Rule for the API ---
-      # Send /api/* to the api-service
-      - path: /api(/|$)(.*) # Match /api, /api/, or /api/anything
-        pathType: Prefix
-        backend:
-          service:
-            name: "api-service"
-            port:
-              number: 80
-              
-      # --- Rule for the Web App ---
-      # Send everything else (/) to the web-service
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: "web-service"
-            port:
-              number: 80
-```
-
-*Apply this file:*
-
-```bash
-kubectl apply -f my-project-ingress.yaml
-```
-
-#### Step 4: Test it\!
-
-1.  Find your Ingress IP address (this is the load balancer the controller created):
-
-    ```bash
-    kubectl get ingress -n ingress-nginx
-    # Wait a minute or two for the 'ADDRESS' field to be populated
-    ```
-
-2.  Let's say the IP is `123.45.67.89`.
-
-3.  **Test the web app:**
-
-    ```bash
-    # This request goes to the '/' path
-    curl http://123.45.67.89/
-    ```
-
-    *Output:* `Hello, world! Version: 1.0.0` (from the `web-service`)
-
-4.  **Test the API:**
-
-    ```bash
-    # This request goes to the '/api/' path
-    curl http://123.45.67.89/api/some/path
-    ```
-
-    *Output:* `Hello, world! Version: 2.0.0` (from the `api-service`)

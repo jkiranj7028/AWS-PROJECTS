@@ -7,7 +7,7 @@
 
 eksctl delete cluster --name ekswithkiran
 
-### 2. Install load balancer controller
+### 2. Create an iam policy in aws account
 
 Download the policy document and create an iam policy in aws account, name it as "AWSLoadBalancerControllerIAMPolicy"
 
