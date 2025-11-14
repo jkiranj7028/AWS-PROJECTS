@@ -17,7 +17,7 @@ Download the policy document and create an iam policy in aws account, name it as
         --policy-name AWSLoadBalancerControllerIAMPolicy \
         --policy-document file://iam_policy.json
 
-Now, Grab the policy ARN : arn:aws:iam::982424467695:policy/AWSLoadBalancerControllerIAMPolicy
+Now, Grab the policy ARN : arn:aws:iam::150965600049:policy/AWSLoadBalancerControllerIAMPolicy
 
 
 ### 3. Create the IAM Service Account
@@ -51,14 +51,143 @@ Confirm that the controller is installed and running:
 
     kubectl get deployment -n kube-system aws-load-balancer-controller
 
-
-
 —————————
-### How to create IAM policy?
+### Sample Project:
 
-    1.Initially create the policy of json file in a specific location
-    2.Run the below command to create the policy in AWS IAM 
-    aws iam create-policy \
-        --policy-name AWSLoadBalancerControllerIAMPolicy \
-        --policy-document file://iam_policy.json
+Below are the four YAML files you provided. These files create a dedicated namespace, deploy the 2048 game, create a service, and set up an ingress to expose the application via the ALB.
 
+### Step 5: Deploy the Calculator Application
+
+Deploy cal-app.yml file:
+
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+    name: dev-namespace
+
+    ---
+
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+    name: cal-deployment
+    namespace: dev-namespace
+    spec:
+    replicas: 2
+    selector:
+        matchLabels:
+        app: cal-app
+    template:
+        metadata:
+        labels:
+            app: cal-app
+        spec:
+        containers:
+            - name: cal-app-container
+            image: thipparthiavinash/mycalapp-awar05
+            ports:
+                - containerPort: 8080
+
+    ---
+
+    apiVersion: v1
+    kind: Service
+    metadata:
+    name: cal-service
+    namespace: dev-namespace
+    spec:
+    selector:
+        app: cal-app
+    ports:
+        - protocol: TCP
+        port: 8080
+        targetPort: 8080
+        nodePort: 30000
+    type: NodePort
+
+### Step 6: Deploy the 2048 Game Application
+
+Deploy 2048-game.yml file:
+
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+    name: dev-namespace
+
+    ---
+
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+    name: 2048-deployment
+    namespace: dev-namespace
+    spec:
+    replicas: 2
+    selector:
+        matchLabels:
+        app: 2048-app
+    template:
+        metadata:
+        labels:
+            app: 2048-app
+        spec:
+        containers:
+            - name: 2048-app-container
+            image: thipparthiavinash/2048-game
+            ports:
+                - containerPort: 80
+    ---
+
+    apiVersion: v1
+    kind: Service
+    metadata:
+    name: game-2048-service
+    namespace: dev-namespace
+    spec:
+    selector:
+        app: 2048-app
+    ports:
+        - protocol: TCP
+        port: 80
+        targetPort: 80
+        nodePort: 30001
+    type: NodePort
+
+### Step 7: Deploy the 2048 Game Application
+
+Deploy ingress.yml file:
+
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+    name: cal-app-ingress
+    namespace: dev-namespace
+    annotations:
+        kubernetes.io/ingress.class: alb
+        alb.ingress.kubernetes.io/scheme: internet-facing
+        alb.ingress.kubernetes.io/target-type: ip
+        alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:150965600049:certificate/57483fa6-cafa-445f-971f-86b2de206959
+        alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
+        alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-Res-2021-06
+    spec:
+    rules:
+    - host: calculator.devopscloudai.com
+        http:
+        paths:
+        - path: /
+            pathType: Prefix
+            backend:
+            service:
+                name: cal-service
+                port:
+                number: 8080
+    - host: game.devopscloudai.com
+        http:
+        paths:
+        - path: /
+            pathType: Prefix
+            backend:
+            service:
+                name: game-2048-service
+                port:
+                number: 80
