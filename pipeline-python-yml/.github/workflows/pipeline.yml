@@ -10,7 +10,7 @@ lint-code:
   stage: test
   image: python:${PYTHON_VERSION}
   script:
-    - echo "Linting code....."
+    - echo "Linting code...."
     - python -m py_compile src/*.py
     - echo "Lint passed!"
 
