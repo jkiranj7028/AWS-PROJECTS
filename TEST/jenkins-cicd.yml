@@ -1,0 +1,19 @@
+stages:
+  - build
+  - test
+  - deploy
+
+build-job:
+  stage: build
+  script:
+    - python -m build
+
+test-job:
+  stage: test
+  script:
+    - pytest tests/
+
+deploy-job:
+  stage: deploy
+  script:
+    - ./deploy.sh
