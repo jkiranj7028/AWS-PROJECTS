@@ -1,1 +1,49 @@
+stages:
+  - test
+  - build
+  - deploy
 
+variables:
+  PYTHON_VERSION: "3.11"
+
+lint-code:
+  stage: test
+  image: python:${PYTHON_VERSION}
+  script:
+    - echo "Linting code...."
+    - python -m py_compile src/*.py
+    - echo "Lint passed!"
+
+unit-tests:
+  stage: test
+  image: python:${PYTHON_VERSION}
+  script:
+    - echo "Running unit tests..."
+    - python tests/test_calculator.py
+    - echo "Tests passed!"
+
+build-package:
+  stage: build
+  image: python:${PYTHON_VERSION}
+  needs:
+    - lint-code
+    - unit-tests
+  script:
+    - echo "Building package..."
+    - mkdir -p dist
+    - cp -r src dist/
+    - echo "v1.0.0" > dist/VERSION
+  artifacts:
+    paths:
+      - dist/
+
+deploy-app:
+  stage: deploy
+  image: alpine:latest
+  needs:
+    - build-package
+  script:
+    - echo "Deploying application..."
+    - ls -la dist/
+    - cat dist/VERSION
+    - echo "Deployment complete!"
