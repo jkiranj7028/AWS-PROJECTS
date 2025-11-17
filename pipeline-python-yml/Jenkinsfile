@@ -40,7 +40,7 @@ pipeline {
         stage('Test') {
             steps {
                 dir('pipeline-python-yml') {
-                    // Run tests with pytest. Set PYTHONPATH to include current directory.
+                    // Run tests with pytest. Set PYTHONPATH to include current directory..
                     sh ". ${VENV}/bin/activate && PYTHONPATH=. pytest test/ -v"
                 }
             }
