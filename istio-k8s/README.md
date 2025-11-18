@@ -1,8 +1,7 @@
 
 ### ISTIO INSTALLATION IN AWS K8S CLUSTER:
 
-```markdown
-# Istio Setup and Testing Guide
+### Istio Setup, Testing Guide and sample project:
 
 ## 📖 Documentation
 - [Istio Documentation](https://istio.io/latest/docs/setup/getting-started/)
@@ -10,6 +9,7 @@
 ---
 
 ## 🚀 Download and Install Istio
+
 ```bash
 curl -L https://istio.io/downloadIstio | sh -
 cd istio-1.28.0
