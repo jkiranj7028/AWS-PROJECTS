@@ -127,6 +127,21 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/a
 - **Usage:** Deploys the Kubernetes Dashboard in the `kubernetes-dashboard` namespace.
 
 ---
+### NOTE: By Default "ClusterIp" Kubernetes-Dashboard installed, if you want you can go with LoadBalancer:
+
+### Change Service Type to LoadBalancer
+By default, the Dashboard service is created as **ClusterIP**.  
+Patch it to **LoadBalancer**:
+
+```bash
+kubectl -n kubernetes-dashboard patch svc kubernetes-dashboard \
+  -p '{"spec": {"type": "LoadBalancer"}}'
+```
+
+- **Usage:** Exposes the Dashboard externally via an AWS ELB.  
+- **Why:** Makes the Dashboard accessible without `kubectl proxy`.
+
+---
 
 ### Create an Admin User
 ```bash
@@ -152,7 +167,7 @@ kubectl -n kubernetes-dashboard create token admin-user
 
 ---
 
-### Access the Dashboard
+### OPTION1: Access the Dashboard
 ```bash
 kubectl proxy
 ```
@@ -160,6 +175,18 @@ kubectl proxy
 
 Open in browser:
 👉 [http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/](http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/)
+
+Paste the token from step 3 when prompted.
+
+### OPTION2: Access the Dashboard
+Get the external LoadBalancer URL:
+```bash
+kubectl -n kubernetes-dashboard get svc kubernetes-dashboard
+```
+
+You’ll see an **EXTERNAL-IP** assigned by AWS.  
+Open in browser:
+👉 `https://<EXTERNAL-IP>/`
 
 Paste the token from step 3 when prompted.
 
