@@ -174,9 +174,3 @@ kops delete cluster --name kops.devopscloudai.com --state=$KOPS_STATE_STORE --ye
 
 ---
 ```
-
----
-
-✨ This Markdown version is now **structured, skimmable, and includes explanations for every command**.  
-
-Would you like me to also add a **diagram of workflow (S3 state store → kOps → AWS → kubectl → Dashboard)** to visually tie it all together?
