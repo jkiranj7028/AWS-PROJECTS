@@ -1,7 +1,6 @@
 
-
-### Reg: Install KOPS / kOps : https://kops.sigs.k8s.io/getting_started/install/
 # kOps Cluster Setup and Dashboard Access Guide
+### Ref: Install KOPS / kOps : https://kops.sigs.k8s.io/getting_started/install/
 
 ## 1. Install and Configure Tools
 - Install **AWS CLI** → Required to interact with AWS resources (S3, EC2, etc.).
