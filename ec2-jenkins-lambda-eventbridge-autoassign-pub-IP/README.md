@@ -181,10 +181,24 @@ You can now:
         }
     ```
     - Set environment variables `EC2_INSTANCE_ID` and `CLOUDFRONT_DISTRIBUTION_ID'.
+    **Here is the setup pic**:
+    ![alt text](<Screenshot 2025-11-20 at 8.59.56 PM.png>)
+
 3. **Create EventBridge Rule**:
     - Create a new EventBridge rule that triggers on EC2 instance state changes (specifically when the instance enters the "running" state).
     - Set the target of the rule to the Lambda function created in the previous step.
-4. **Test the Setup**:
+
+    ![alt text](<Screenshot 2025-11-20 at 8.59.33 PM.png>)
+    
+4. **Route 53**: 
+    - Add CloudFront 'Domain Name' in in Route 53 with A Record
+    ![alt text](<Screenshot 2025-11-20 at 9.00.55 PM.png>)
+
+5. **CloudFront**:
+    - Create Distribution in cloudFront with subdomain ie. jenkins.devopscloudai.com
+    ![alt text](<Screenshot 2025-11-20 at 9.00.28 PM.png>)
+
+5. **Test the Setup**:
     - Start the Jenkins EC2 instance and verify that the Lambda function is triggered.
     - Check the CloudFront distribution to ensure that the origin has been updated with the new public DNS of the Jenkins instance.
 ## Conclusion
