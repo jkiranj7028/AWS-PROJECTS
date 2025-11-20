@@ -25,8 +25,8 @@ The architecture consists of the following components:
 1. **Launch EC2 Instance**:
     - Launch an EC2 instance with Jenkins installed. Ensure that the instance has the necessary IAM role to allow Lambda to modify its network settings.
     
-    Here’s your text converted into a clean **Markdown (.md)** format, with headings, lists, and code blocks for clarity:
-Perfect — let’s extend your Jenkins installation guide with the **initial setup steps** after the service is running. Here’s the refined **Markdown (.md)** version including unlock, plugins, and admin user creation:
+   
+let’s extend your Jenkins installation guide with the **initial setup steps** after the service is running. 
 
 # Jenkins Installation Guide (RedHat/CentOS)
 
@@ -122,6 +122,8 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 - Confirm Jenkins URL (e.g., `http://<Public-IP>:8080`).
 - Save and finish setup.
 
+![alt text](<Screenshot 2025-11-20 at 9.02.24 PM.png>)
+
 ---
 
 ## ✅ Jenkins is Ready
@@ -186,8 +188,8 @@ You can now:
     - Start the Jenkins EC2 instance and verify that the Lambda function is triggered.
     - Check the CloudFront distribution to ensure that the origin has been updated with the new public DNS of the Jenkins instance.
 ## Conclusion
-By following these steps, you can automate the assignment of a public IP to your Jenkins EC2
-    instances using AWS Lambda and EventBridge. This setup enhances accessibility and reduces manual configuration efforts.
+By following these steps, you can automate the assignment of a public IP to your Jenkins EC2 instances using AWS Lambda and EventBridge. This setup enhances accessibility and reduces manual configuration efforts.
+
 ## Cleanup
 To avoid incurring unnecessary charges, remember to delete the resources created during this setup when they are
 no longer needed.
