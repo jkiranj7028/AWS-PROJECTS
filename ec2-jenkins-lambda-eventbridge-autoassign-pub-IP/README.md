@@ -1,11 +1,11 @@
 ### I want to run Jenkins on a custom domain: jenkins.devopscloudai.com.  
 To achieve this, I have set up the following components:
 
-1.  EC2 Instance – Hosting the Jenkins server.
+1.  EC2 Instance – Hosts the Jenkins server.
 2.  Jenkins Installation – Installed and configured on the EC2 instance.
-3.  CloudFront – Used to serve traffic for jenkins.devopscloudai.com.
-4.  Route 53 – Configured DNS to make the domain accessible globally.
-5.  AWS Lambda + EventBridge – Automates the assignment of public IPs to Jenkins instances running in EC2.
+3.  CloudFront – Distributes traffic for the custom domain jenkins.devopscloudai.com.
+4.  Route 53 – Provides DNS configuration to make the domain globally accessible.
+5.  AWS Lambda + EventBridge – Automates the reassignment of EC2 public IPs for Jenkins instances running on EC2. When an EC2 instance transitions from a stopped to a running state, EventBridge triggers a Lambda function. This function executes a predefined Python script that updates the CloudFront origin, replacing the old endpoint (e.g., ec2-15-204-145-134.ap-south-1.compute.amazonaws.com) with the new one (e.g., ec2-13-204-157-132.ap-south-1.compute.amazonaws.com).
 
 This project demonstrates how to integrate these AWS services to ensure Jenkins is always accessible externally on the custom domain, without requiring manual intervention.
 
@@ -16,6 +16,7 @@ The architecture consists of the following components:
 1. **EC2 Instance**: Hosts the Jenkins server.
 2. **AWS Lambda Function**: A serverless function that assigns a public IP to the Jenkins EC2 instance when it is launched.
 3. **Amazon EventBridge**: Monitors EC2 instance state changes and triggers the Lambda function when a Jenkins instance is started.
+
 ## Prerequisites
 - An AWS account with necessary permissions to create EC2 instances, Lambda functions, and EventBridge
 - AWS CLI installed and configured
@@ -23,6 +24,112 @@ The architecture consists of the following components:
 ## Setup Instructions
 1. **Launch EC2 Instance**:
     - Launch an EC2 instance with Jenkins installed. Ensure that the instance has the necessary IAM role to allow Lambda to modify its network settings.
+    
+    Here’s your text converted into a clean **Markdown (.md)** format, with headings, lists, and code blocks for clarity:
+Perfect — let’s extend your Jenkins installation guide with the **initial setup steps** after the service is running. Here’s the refined **Markdown (.md)** version including unlock, plugins, and admin user creation:
+
+# Jenkins Installation Guide (RedHat/CentOS)
+
+## Prerequisites
+- Ensure **Java** is installed (Jenkins requires Java).
+- Jenkins runs on **port 8080** by default.
+
+---
+
+## Step 1: Add Jenkins Repository
+```bash
+sudo wget -O /etc/yum.repos.d/jenkins.repo \
+    https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo yum upgrade
+```
+
+---
+
+## Step 2: Install Dependencies
+```bash
+dnf install fontconfig -y
+```
+
+---
+
+## Step 3: Install Java
+```bash
+dnf install java-21-amazon-corretto -y
+```
+
+---
+
+## Step 4: Install Jenkins
+```bash
+dnf install jenkins -y
+```
+
+---
+
+## Step 5: Enable and Start Jenkins
+Enable Jenkins service immediately:
+```bash
+systemctl enable jenkins --now
+```
+
+Or start and then enable:
+```bash
+systemctl start jenkins
+systemctl enable jenkins
+```
+
+---
+
+## Step 6: Verify Jenkins Service
+```bash
+systemctl status jenkins
+```
+- Access Jenkins at: **http://<public-ip>:8080**
+
+---
+
+## Step 7: Initial Jenkins Setup
+
+### Unlock Jenkins
+- When you first access Jenkins, it asks for an **initial admin password**.
+- Retrieve it from:
+```bash
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+- Copy and paste this password into the web UI.
+
+---
+
+### Install Suggested Plugins
+- Jenkins will prompt to install plugins.
+- Choose **Install suggested plugins** for a standard setup.
+- Alternatively, select specific plugins based on your project needs.
+
+---
+
+### Create Admin User
+- After plugins are installed, Jenkins asks you to create the first admin user.
+- Provide:
+  - **Username**
+  - **Password**
+  - **Full name**
+  - **Email address**
+
+---
+
+### Configure Instance
+- Confirm Jenkins URL (e.g., `http://<Public-IP>:8080`).
+- Save and finish setup.
+
+---
+
+## ✅ Jenkins is Ready
+You can now:
+- Log in with your admin account.
+- Start creating jobs, pipelines, and configuring integrations.
+
+
 2. **Create Lambda Function**:
     - Create a new Lambda function in the AWS Management Console.
     - Use the following Python code for the Lambda function:
@@ -87,11 +194,4 @@ no longer needed.
 1. Delete the EC2 instance.
 2. Delete the Lambda function.
 3. Delete the EventBridge rule.
-## Additional Resources
-- [AWS Lambda Documentation](https://docs.aws.amazon.com/lambda/)
-- [Amazon EventBridge Documentation](https://docs.aws.amazon.com/eventbridge/)
-- [Amazon EC2 Documentation](https://docs.aws.amazon.com/ec2/)
-- [Amazon CloudFront Documentation](https://docs.aws.amazon.com/cloudfront/)
-    instance using AWS Lambda and EventBridge. This setup enhances accessibility and reduces manual configuration efforts.
-
 
