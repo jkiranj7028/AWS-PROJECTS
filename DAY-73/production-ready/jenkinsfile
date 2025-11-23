@@ -17,11 +17,11 @@ pipeline {
 
   environment {
     // Replace this with your Docker repo/org
-    DOCKER_REGISTRY = "docker.io/your-org"
+    DOCKER_REGISTRY = "docker.io/docker7028/docker-hub-repo"
     APP_NAME = "python-app"
 
     // Jenkins credentials IDs (replace)
-    DOCKER_CREDS_ID = "docker-hub-creds"      // username/password (Credentials -> Username with password)
+    DOCKER_CREDS_ID = "docker-hub-tot"      // username/password (Credentials -> Username with password)
     KUBECONFIG_DEV   = "kubeconfig-dev"       // kubeconfig file credential (type: Secret file)
     KUBECONFIG_STAGE = "kubeconfig-stage"
     KUBECONFIG_PROD  = "kubeconfig-prod"
@@ -62,8 +62,8 @@ pipeline {
           env.IMAGE_TAG = "${branch}-${env.BUILD_NUMBER}-${shortSha}-${ts}"
           env.IMAGE = "${DOCKER_REGISTRY}/${APP_NAME}:${env.IMAGE_TAG}"
 
-          echo "IMAGE_TAG = ${env.IMAGE_TAG}"
-          echo "IMAGE = ${env.IMAGE}"
+          echo "IMAGE_TAG = ${env.IMAGE_TAG}" //IMAGE_TAG = main-52-a1b2c3d4-20240214153000
+          echo "IMAGE = ${env.IMAGE}" //docker.io/myorg/python-app:main-52-a1b2c3d4-20240214153000
           // Save metadata artifact
           writeFile file: 'release-metadata.json', text: """{
             "image":"${env.IMAGE}",
